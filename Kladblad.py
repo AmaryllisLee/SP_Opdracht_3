@@ -1,20 +1,15 @@
-import psycopg2
-
-c = psycopg2.connect("dbname=huwbbackupdb user=postgres password=amaryllis")
-cur = c.cursor()
-
-
+'''
 def fetch_query(query):
     lst = []
     cur.execute(query)
     records = cur.fetchall()
     for i in records:
         return i
-def contant_based(profilid):
+    cur.close()
+'''
 
-    query = 'select prodid from profiles_previously_viewed where profid = {};'.format(profilid)
-    prodid= fetch_query(query)
 
+'''
     for id in prodid:
         query2 = 'select category,brand from products where id = \'{}\';'.format()
         cat_brand = fetch_query(query2)
@@ -28,13 +23,32 @@ def contant_based(profilid):
         print(i)
 #query om de data toe te voegen in tabel recommendation
     #cur.execute("Insert into recommendation  values ('{}','{}','{}','{}','{}','{}','{}')").format(profilid, cat_brand[0],cat_brand[1],prod_ids[0][0],prod_ids[1][0],prod_ids[2][0],prod_ids[3][0])
+    c.commit()
+    cur.close()
 
-    print('Inserted')
+'''
 
+'''
+-- top 3 combination category and brand that users has previously_viewed
+Select distinct  category, brand,count(*) 
+from profiles_previously_viewed,products 
+where prodid = products.id
+Group by category, brand 
+Order by count(*) DESC
+limit 3;
 
+---result:
+--Baby & kind , Pampers
+--Gezond & verzorging, schwarzkopf
+-- Gezond & verzorging , Gillete
+'''
 
-profilid= "'5a39f402ed295900010413d3'"
-profilid2 = "'5a394b78ed295900010396a5'"
-contant_based(profilid2)
+'''
+select distinct  prodid , count(*)
+from profiles_previously_viewed,products
+where prodid = products.id
+And category = 'Baby & kind' And brand = 'Pampers'
+group by profiles_previously_viewed.prodid
+Order by count(*) DESC;
 
-
+'''
