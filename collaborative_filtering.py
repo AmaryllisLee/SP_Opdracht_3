@@ -4,6 +4,8 @@ import psycopg2
 c = psycopg2.connect("dbname=huwbbackupdb user=postgres password=amaryllis")
 cur = c.cursor()
 
+#TODO Collaborative set regels moet aangepast wordend
+
 def fetch_query(conn, query):
     'Execute query and return result'
     cur = conn.cursor()
@@ -19,47 +21,135 @@ def collaborative(profilid):
     'Recommend products based on similar profilid'
 
     #Query that needs to
+    userSegment = []
+    userProdid = []
+    userCategory = []
+    userSubCategory = []
+    userSubSubCategory =[]
+    userTargetAudience = []
 
-    segment_prodid = ''' 
-                      --Get the segment of user and the product ids where the user has previously viewed.  
-                     select segment, prodid 
-                     from profiles , profiles_previously_viewed 
-                     where profid = profiles.id And profid ='{}'
+    create_table = '''
+        --Query to drop and create table content-filtering
+        Drop table if exists collaborative_filtering ;
+
+        Create table collaborative_filtering(
+        product_id varchar
+        ) ; '''
+
+    getEigenschappenUserId= ''' 
+                    select  profiles.segment , prodid, products.category,products.subcategory, products.subsubcategory, products.targetaudience 
+                    from profiles, products, profiles_previously_viewed 
+                    where profiles.id = profid and prodid = products.id and profid='{}';;
                      '''
 
 
-    get_profid = '''
-            -- Get the profile_ids which has the same segment and viewed the same product as the 'profilid'
-            select profid from profiles_previously_viewed, profiles where segment = '{}' AND prodid = '{}';
+    get_productsID = '''
+          select distinct  prodid , count(*)
+        from profiles, products, profiles_previously_viewed 
+        where profid = profiles.id and profiles.segment = '{}' and products.category = '{}' 
+        and products.subcategory = '{}'and products.subsubcategory = '{}' 
+        and products.targetaudience = '{}' and prodid != '{}'
+        Group by profiles_previously_viewed.prodid
+        Order by count(*) DESC
+        Limit  4;
     '''
 
-    res_seg_prof = fetch_query(c,segment_prodid.format(profilid))
-    print(res_seg_prof)
-    r = res_seg_prof[0]
+    insert_recommendedProdids = 'Insert into collaborative_filtering values(\'{}\')'
+    #-----------------------------------------------------------------------------------------------------------------------------
 
-    userSegment = r[0]
-    userProdid = r[1]
-
-
-    profids_ids = []
-    result_profids = fetch_query(c, get_profid.format(userSegment, userProdid))
-    for id in result_profids:
-        profids_ids.append(id[0])
-    print(len(profids_ids))
-
-    recommended_prodids = []
-    for profid in profids_ids:
-        getProd = 'select prodid from profiles_previously_viewed where profid = {}; '.format(profid)
-        recom_prod = fetch_query(c, getProd)
-        print(recom_prod)
+    res_EigenschappenUserId = fetch_query(c,getEigenschappenUserId.format(profilid))
+    print(res_EigenschappenUserId)
+    res_EigenschappenUserId = res_EigenschappenUserId[0]
+    if None in res_EigenschappenUserId:
+        getEigenschappenUserId_2 = '''
+                    select  profiles.segment , prodid, products.category,products.targetaudience 
+                    from profiles, products, profiles_previously_viewed 
+                    where profiles.id = profid and prodid = products.id and profid='{}';
+                    
         '''
-        if recom_prod == userProdid:
-            continue
+        res_EigenschappenUserId_2 = fetch_query(c, getEigenschappenUserId_2.format(profilid))
+        res_EigenschappenUserId_2 = res_EigenschappenUserId_2[0]
+        print(res_EigenschappenUserId_2)
+
+#---------------------------
+        if None in res_EigenschappenUserId_2:
+
+            # Recommend products ids based on profile with similar segment and who has viewed products of the same category
+            getEigenschappenUserId_3 = '''
+                           select  profiles.segment , prodid, products.category 
+                           from profiles, products, profiles_previously_viewed 
+                           where profiles.id = profid and prodid = products.id and profid='{}';
+
+               '''
+            res_EigenschappenUserId_2 = fetch_query(c, getEigenschappenUserId_2.format(profilid))
+            res_EigenschappenUserId_2 = res_EigenschappenUserId_2[0]
+            print(res_EigenschappenUserId_2)
+
+            userSegment.append(res_EigenschappenUserId[0])
+            userProdid.append(res_EigenschappenUserId[1])
+            userCategory.append(res_EigenschappenUserId[2])
+
+            recommendedProdids = []
+            result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0],userProdid[0]))
+            for id in result_profids:
+                recommendedProdids.append(id[0])
+
+
         else:
-        '''
 
-collaborative('5a394475ed29590001038e43')
+            userSegment.append(res_EigenschappenUserId[0])
+            userProdid.append(res_EigenschappenUserId[1])
+            userCategory.append(res_EigenschappenUserId[2])
+            userTargetAudience.append(res_EigenschappenUserId[3])
+
+            recommendedProdids = []
+            result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0],  userTargetAudience[0],
+                                                                  userProdid[0]))
+            for id in result_profids:
+                recommendedProdids.append(id[0])
+    else:
 
 
+        userSegment.append(res_EigenschappenUserId[0])
+        userProdid.append(res_EigenschappenUserId[1])
+        userCategory.append(res_EigenschappenUserId[2])
+        userSubCategory.append(res_EigenschappenUserId[3])
+        userSubSubCategory.append(res_EigenschappenUserId[4])
+        userTargetAudience.append(res_EigenschappenUserId[5])
+
+
+        recommendedProdids = []
+        result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0], userSubCategory[0], userSubSubCategory[0], userTargetAudience[0], userProdid[0]))
+        for id in result_profids:
+            recommendedProdids.append(id[0])
+
+
+        print(recommendedProdids)
+
+    #---------------------------------------------------------------------------------
+
+    try:
+        cur.execute(create_table)
+        print('Table content-filtering is created')
+    except:
+        print('Failed to execute')
+
+    # insert product_ids in to table collaborative-filtering
+    for i in recommendedProdids:
+        try:
+            cur.execute(insert_recommendedProdids.format(i))
+            print('Succesfully inserted')
+        except:
+            print('error')
+    c.commit()
+
+    cur.close()
+    c.close()
+
+
+#collaborative('5a394475ed29590001038e43')
+collaborative('5a39402ba825610001bb6dc1')
+
+testId ='5a394b78ed295900010396a5'
 
 
