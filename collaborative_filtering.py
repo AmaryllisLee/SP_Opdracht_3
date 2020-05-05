@@ -6,6 +6,7 @@ cur = c.cursor()
 
 #TODO Collaborative set regels moet aangepast wordend
 
+
 def fetch_query(conn, query):
     'Execute query and return result'
     cur = conn.cursor()
@@ -16,6 +17,8 @@ def fetch_query(conn, query):
         return fetched
     except:
         print('Query does not exist')
+
+
 
 def collaborative(profilid):
     'Recommend products based on similar profilid'
@@ -43,101 +46,79 @@ def collaborative(profilid):
                      '''
 
 
-    get_productsID = '''
-          select distinct  prodid , count(*)
-        from profiles, products, profiles_previously_viewed 
-        where profid = profiles.id and profiles.segment = '{}' and products.category = '{}' 
-        and products.subcategory = '{}'and products.subsubcategory = '{}' 
-        and products.targetaudience = '{}' and prodid != '{}'
-        Group by profiles_previously_viewed.prodid
-        Order by count(*) DESC
-        Limit  4;
-    '''
-
-    insert_recommendedProdids = 'Insert into collaborative_filtering values(\'{}\')'
     #-----------------------------------------------------------------------------------------------------------------------------
+
 
     res_EigenschappenUserId = fetch_query(c,getEigenschappenUserId.format(profilid))
     print(res_EigenschappenUserId)
     res_EigenschappenUserId = res_EigenschappenUserId[0]
-    if None in res_EigenschappenUserId:
-        getEigenschappenUserId_2 = '''
-                    select  profiles.segment , prodid, products.category,products.targetaudience 
-                    from profiles, products, profiles_previously_viewed 
-                    where profiles.id = profid and prodid = products.id and profid='{}';
-                    
-        '''
-        res_EigenschappenUserId_2 = fetch_query(c, getEigenschappenUserId_2.format(profilid))
-        res_EigenschappenUserId_2 = res_EigenschappenUserId_2[0]
-        print(res_EigenschappenUserId_2)
 
-#---------------------------
-        if None in res_EigenschappenUserId_2:
+    userSegment.append(res_EigenschappenUserId[0])
+    userProdid.append(res_EigenschappenUserId[1])
+    userCategory.append(res_EigenschappenUserId[2])
+    userSubCategory.append(res_EigenschappenUserId[3])
+    userSubSubCategory.append(res_EigenschappenUserId[4])
+    userTargetAudience.append(res_EigenschappenUserId[5])
 
-            # Recommend products ids based on profile with similar segment and who has viewed products of the same category
-            getEigenschappenUserId_3 = '''
-                           select  profiles.segment , prodid, products.category 
-                           from profiles, products, profiles_previously_viewed 
-                           where profiles.id = profid and prodid = products.id and profid='{}';
 
-               '''
-            res_EigenschappenUserId_2 = fetch_query(c, getEigenschappenUserId_2.format(profilid))
-            res_EigenschappenUserId_2 = res_EigenschappenUserId_2[0]
-            print(res_EigenschappenUserId_2)
 
-            userSegment.append(res_EigenschappenUserId[0])
-            userProdid.append(res_EigenschappenUserId[1])
-            userCategory.append(res_EigenschappenUserId[2])
+    get_productsID = '''
+                select distinct  prodid ,  count(*)
+                from profiles, products, profiles_previously_viewed 
+                where profid = profiles.id and profiles.segment = '{}' and products.category = '{}' 
+                and products.subcategory = '{}'and products.subsubcategory = '{}' 
+                and products.targetaudience = '{}' and prodid != '{}'
+                Group by profiles_previously_viewed.prodid
+                Order by count(*) DESC
+                Limit  4;
+            '''
 
-            recommendedProdids = []
-            result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0],userProdid[0]))
-            for id in result_profids:
-                recommendedProdids.append(id[0])
 
+    res_productID = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0], userSubCategory[0],
+                                                          userSubSubCategory[0], userTargetAudience[0], userProdid[0]))
+    if res_productID ==[]:
+        get_productsID_2 = '''
+                        select distinct  prodid ,  count(*)
+                        from profiles, products, profiles_previously_viewed 
+                        where profid = profiles.id and profiles.segment = '{}' and products.category = '{}'  
+                        and products.targetaudience = '{}' and prodid != '{}'
+                        Group by profiles_previously_viewed.prodid
+                        Order by count(*) DESC
+                        Limit  4;
+                    '''
+
+        res_productID = fetch_query(c, get_productsID_2.format(userSegment[0], userCategory[0], userTargetAudience[0],userProdid[0]))
+
+        if res_productID== []:
+            get_productsID_3 = '''
+                select distinct  prodid   count(*)
+                from profiles, profiles_previously_viewed
+                where profid = profiles.id and profiles.segment = '{}' and prodid != '{}'  
+                Group by profiles_previously_viewed.prodid
+                Order by count(*) DESC
+                Limit  4;
+                        '''
+
+            res_productID = fetch_query(c, get_productsID_3.format(userSegment[0], userProdid[0]))
+            print(res_productID)
 
         else:
-
-            userSegment.append(res_EigenschappenUserId[0])
-            userProdid.append(res_EigenschappenUserId[1])
-            userCategory.append(res_EigenschappenUserId[2])
-            userTargetAudience.append(res_EigenschappenUserId[3])
-
-            recommendedProdids = []
-            result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0],  userTargetAudience[0],
-                                                                  userProdid[0]))
-            for id in result_profids:
-                recommendedProdids.append(id[0])
+            print(res_productID)
     else:
+        print(res_productID)
 
 
-        userSegment.append(res_EigenschappenUserId[0])
-        userProdid.append(res_EigenschappenUserId[1])
-        userCategory.append(res_EigenschappenUserId[2])
-        userSubCategory.append(res_EigenschappenUserId[3])
-        userSubSubCategory.append(res_EigenschappenUserId[4])
-        userTargetAudience.append(res_EigenschappenUserId[5])
-
-
-        recommendedProdids = []
-        result_profids = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0], userSubCategory[0], userSubSubCategory[0], userTargetAudience[0], userProdid[0]))
-        for id in result_profids:
-            recommendedProdids.append(id[0])
-
-
-        print(recommendedProdids)
-
-    #---------------------------------------------------------------------------------
-
+#-----------------------------------------------------------------------------
     try:
         cur.execute(create_table)
-        print('Table content-filtering is created')
+        print('Table colaborative_filtering is created')
     except:
         print('Failed to execute')
 
     # insert product_ids in to table collaborative-filtering
-    for i in recommendedProdids:
+    for i in res_productID:
         try:
-            cur.execute(insert_recommendedProdids.format(i))
+            cur.execute('Insert into collaborative_filtering  values(\'{}\')'.format(i[0]))
             print('Succesfully inserted')
         except:
             print('error')
@@ -147,8 +128,10 @@ def collaborative(profilid):
     c.close()
 
 
-#collaborative('5a394475ed29590001038e43')
-collaborative('5a39402ba825610001bb6dc1')
+#-------------------------------------------------------------------------------------
+
+collaborative('5a394475ed29590001038e43')
+#collaborative('5a39402ba825610001bb6dc1')
 
 testId ='5a394b78ed295900010396a5'
 
