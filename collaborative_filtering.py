@@ -4,7 +4,6 @@ import psycopg2
 c = psycopg2.connect("dbname=huwbbackupdb user=postgres password=amaryllis")
 cur = c.cursor()
 
-#TODO Collaborative set regels moet aangepast wordend
 
 
 def fetch_query(conn, query):
@@ -102,6 +101,7 @@ def collaborative(profilid):
             res_productID = fetch_query(c, get_productsID_3.format(userSegment[0], userProdid[0]))
             print(res_productID)
 
+            #TODO what if profile-id  is completely []??
         else:
             print(res_productID)
     else:
@@ -129,10 +129,9 @@ def collaborative(profilid):
 
 
 #-------------------------------------------------------------------------------------
-
-collaborative('5a394475ed29590001038e43')
+#Test 
+#collaborative('5a394475ed29590001038e43')
 #collaborative('5a39402ba825610001bb6dc1')
-
-testId ='5a394b78ed295900010396a5'
+#collaborative('5a394b78ed295900010396a5')
 
 

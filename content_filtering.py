@@ -91,24 +91,11 @@ def content_filtering():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+#---------------------------------------------------------------
 
 
 
 # Controle
-test_profilid = "'5a39f402ed295900010413d3'"
-profilid2 = "'5a394b78ed295900010396a5'"
 content_filtering()
 
 
