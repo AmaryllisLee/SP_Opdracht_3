@@ -87,7 +87,7 @@ def collaborative(profilid):
 
         res_productID = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0], userSubCategory[0],
                                                               userSubSubCategory[0], userTargetAudience[0], userProdid[0]))
-        if res_productID ==[]:
+        if res_productID ==[] or None in res_productID :
             get_productsID_2 = '''
                             select distinct  prodid ,  count(*)
                             from profiles, products, profiles_previously_viewed 
@@ -100,7 +100,7 @@ def collaborative(profilid):
 
             res_productID = fetch_query(c, get_productsID_2.format(userSegment[0], userCategory[0], userTargetAudience[0],userProdid[0]))
 
-            if res_productID== []:
+            if res_productID== [] or None in res_productID:
                 get_productsID_3 = '''
                     select distinct  prodid  , count(*)
                     from profiles, profiles_previously_viewed
@@ -113,9 +113,7 @@ def collaborative(profilid):
                 res_productID = fetch_query(c, get_productsID_3.format(userSegment[0], userProdid[0]))
                 print(res_productID)
 
-                #TODO what if profile-id  is completely []??
-
-                if res_productID == []:
+                if res_productID == [] or None in res_productID:
                     getPopularproducts = '''
                     select prodid, count(*) 
                     from profiles_previously_viewed
@@ -157,6 +155,6 @@ def collaborative(profilid):
 #collaborative('5a394475ed29590001038e43') # profiles that volodet all the set rules
 #collaborative('5a39402ba825610001bb6dc1') # profiles that does not voldoet to all the requisit
 #collaborative('5a394b78ed295900010396a5') # profilid where profile does not have no segment , no product viewed
-collaborative('5bd1c3be25201e0001d3771a') # profilid where profile contains segment and prodid where there's no eigenschappen
+#collaborative('5bd1c3be25201e0001d3771a') # profilid where profile contains segment and prodid where there's no eigenschappen
 
 
