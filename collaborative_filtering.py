@@ -157,7 +157,9 @@ def collaborative(profilid):
 
 #-------------------------------------------------------------------------------------
 #Test voorbeelden
-collaborative('5a394475ed29590001038e43') # profiles that volodet all the set rules
+#Ze moeten 1 voor 1 getest worden
+
+#collaborative('5a394475ed29590001038e43') # profiles that volodet all the set rules
 #collaborative('5a39402ba825610001bb6dc1') # profiles that does not voldoet to all the requisit
 #collaborative('5a394b78ed295900010396a5') # profilid where profile does not have no segment , no product viewed
 #collaborative('5bd1c3be25201e0001d3771a') # profilid where profile contains segment and prodid where there's no eigenschappen

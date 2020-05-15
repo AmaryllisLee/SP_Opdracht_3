@@ -93,10 +93,9 @@ def content_filtering():
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-# Controle
+#Testing
+#Er moet de volgende lijst getoond en toegevoegd in tabel content filtering
+# ['38822', '38871', '32518', '45833']
 content_filtering()
 
 
