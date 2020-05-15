@@ -1,5 +1,5 @@
 import psycopg2
-#from content_filtering import fetch_query
+
 
 c = psycopg2.connect("dbname=huwbbackupdb user=postgres password=amaryllis")
 cur = c.cursor()
@@ -22,7 +22,6 @@ def fetch_query(conn, query):
 def collaborative(profilid):
     'Recommend products based on similar profilid'
 
-    #Query that needs to
     userSegment = []
     userProdid = []
     userCategory = []
@@ -49,7 +48,8 @@ def collaborative(profilid):
 
 
     res_EigenschappenUserId = fetch_query(c,getEigenschappenUserId.format(profilid))
-    if res_EigenschappenUserId == []:
+    if res_EigenschappenUserId == []: # profilid heeft geen prodid, of segment om te gebruiken voor aanbeveling,
+        #De 4 meeste bekeken producten wordt gehaald
             getPopularproducts = '''
             select prodid, count(*) 
             from profiles_previously_viewed
@@ -72,7 +72,7 @@ def collaborative(profilid):
         userTargetAudience.append(res_EigenschappenUserId[5])
 
 
-
+        #Haal uit een groep van profiles met een bepaalde segment,  de 4 meeste bekeken prodids met een bepaalde category, subcategory, subsubcategory, targetaudience.
         get_productsID = '''
                     select distinct  prodid ,  count(*)
                     from profiles, products, profiles_previously_viewed 
@@ -87,7 +87,10 @@ def collaborative(profilid):
 
         res_productID = fetch_query(c, get_productsID.format(userSegment[0], userCategory[0], userSubCategory[0],
                                                               userSubSubCategory[0], userTargetAudience[0], userProdid[0]))
+
+
         if res_productID ==[] or None in res_productID :
+            # Haal uit een groep van profiles met een bepaalde segment,  de 4 meeste bekeken prodids met een bepaalde category,targetaudience
             get_productsID_2 = '''
                             select distinct  prodid ,  count(*)
                             from profiles, products, profiles_previously_viewed 
@@ -101,6 +104,7 @@ def collaborative(profilid):
             res_productID = fetch_query(c, get_productsID_2.format(userSegment[0], userCategory[0], userTargetAudience[0],userProdid[0]))
 
             if res_productID== [] or None in res_productID:
+                # Haal uit een groep van profiles met een bepaalde segment,  de 4 meeste bekeken prodids.
                 get_productsID_3 = '''
                     select distinct  prodid  , count(*)
                     from profiles, profiles_previously_viewed
@@ -114,6 +118,7 @@ def collaborative(profilid):
                 print(res_productID)
 
                 if res_productID == [] or None in res_productID:
+                    # De 4 meeste bekeken producten worden aanbevolen.
                     getPopularproducts = '''
                     select prodid, count(*) 
                     from profiles_previously_viewed
@@ -132,7 +137,7 @@ def collaborative(profilid):
 
 #-----------------------------------------------------------------------------
     try:
-        cur.execute(create_table)
+        cur.execute(create_table) #create tabel collaborative filtering
         print('Table colaborative_filtering is created')
     except:
         print('Failed to execute')
@@ -140,10 +145,10 @@ def collaborative(profilid):
     # insert product_ids in to table collaborative-filtering
     for i in res_productID:
         try:
-            cur.execute('Insert into collaborative_filtering  values(\'{}\')'.format(i[0]))
-            print('Succesfully inserted')
+            cur.execute('Insert into collaborative_filtering  values(\'{}\')'.format(i[0])) #voeg prodids in tabel collaborative filtering
         except:
             print('error')
+    print('Succesfully inserted')
     c.commit()
 
     cur.close()
@@ -151,8 +156,8 @@ def collaborative(profilid):
 
 
 #-------------------------------------------------------------------------------------
-#Test
-#collaborative('5a394475ed29590001038e43') # profiles that volodet all the set rules
+#Test voorbeelden
+collaborative('5a394475ed29590001038e43') # profiles that volodet all the set rules
 #collaborative('5a39402ba825610001bb6dc1') # profiles that does not voldoet to all the requisit
 #collaborative('5a394b78ed295900010396a5') # profilid where profile does not have no segment , no product viewed
 #collaborative('5bd1c3be25201e0001d3771a') # profilid where profile contains segment and prodid where there's no eigenschappen

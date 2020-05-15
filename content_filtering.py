@@ -72,8 +72,9 @@ def content_filtering():
     try:
         products_ids = []
         result_ids = fetch_query(c,query_prod_ids.format(category, brand))
-        for id in result_ids:
-            products_ids.append(id[0])
+        for productid in result_ids:
+            products_ids.append(productid[0])
+        print('Top 4 producten van Category: {} en Merk: {} '.format(category, brand))
         print(products_ids)
     except:
         ('Failed to execute')
@@ -91,7 +92,7 @@ def content_filtering():
 
 
 
-#---------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 

@@ -1,3 +1,5 @@
+#Dit bestand is gebruikt om verschillende code te proberen
+
 '''
 def fetch_query(query):
     lst = []
